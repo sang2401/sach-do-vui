@@ -613,6 +613,8 @@ async function speakQ(){
     if(qi===0) audioFile='toan_cau3.mp3';
     else if(qi===2) audioFile='toan_cau1.mp3';
     else audioFile='toan_cau2.mp3';
+  }else if(MON[mon].id==='lsdl' && qi===2){
+    audioFile='lsdl_cau3_moi.mp3';
   }else{
     audioFile=MON[mon].id+'_cau'+(qi+1)+'.mp3';
   }
