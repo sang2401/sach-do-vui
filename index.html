@@ -5,40 +5,385 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Đố vui theo sách</title>
 <style>
-  body{font-family:Arial,sans-serif;margin:0;background:#f3efff;color:#222;text-align:center}
-  header{background:#6a3fd0;color:#fff;padding:12px;font-size:20px;font-weight:bold}
-  main{max-width:640px;margin:0 auto;padding:12px}
-  input{width:92%;padding:10px;font-size:15px;border:2px solid #aaa;border-radius:8px}
-  button{font-size:20px;font-weight:bold;border:3px solid #222;border-radius:14px;padding:14px 22px;margin:6px;cursor:pointer;color:#fff}
-  .b-q{background:#e67e22}.b-s{background:#27ae60}.b-a{background:#9966ff;min-width:90px}
-  .b-r{background:#e74c3c}.b-g{background:#777;font-size:14px;padding:8px 12px}.b-go{background:#2f7fd1}
-  #cam{display:inline-block;border:4px solid #6a3fd0;border-radius:12px;overflow:hidden;min-height:60px}
-    .ans{display:inline-block;text-align:left;margin-top:6px}
-  #msg{font-size:22px;line-height:1.5;min-height:60px;margin:10px;font-weight:bold;white-space:pre-line}
-  .hide{display:none}
-  #cam:empty{display:none}
-  #bar{font-size:14px;color:#555}
+*{box-sizing:border-box}
+:root{
+  --ink:#18234f;
+  --muted:#69759b;
+  --blue:#2e7cff;
+  --purple:#8159f4;
+  --card:rgba(255,255,255,.92);
+  --shadow:0 14px 38px rgba(65,77,145,.15);
+}
+html,body{min-height:100%}
+body{
+  margin:0;
+  font-family:"Segoe UI",Arial,sans-serif;
+  color:var(--ink);
+  text-align:center;
+  background:
+    radial-gradient(circle at 7% 90%,rgba(109,138,255,.14) 0 120px,transparent 121px),
+    radial-gradient(circle at 95% 90%,rgba(142,97,255,.13) 0 145px,transparent 146px),
+    linear-gradient(180deg,#eef3ff 0,#fbfcff 48%,#f2f5ff 100%);
+  overflow-x:hidden;
+}
+
+/* ===== HEADER ===== */
+header{
+  position:relative;
+  min-height:132px;
+  padding:22px 150px 19px;
+  color:#fff;
+  background:linear-gradient(110deg,#a76cf5 0%,#7356f5 42%,#2c7bf7 100%);
+  border-radius:0 0 30px 30px;
+  box-shadow:0 8px 24px rgba(76,72,177,.22);
+  overflow:hidden;
+}
+header:before{
+  content:"📖";
+  position:absolute;
+  left:7%;
+  top:22px;
+  font-size:58px;
+  opacity:.30;
+  transform:rotate(-10deg);
+}
+header:after{
+  content:"🤖";
+  position:absolute;
+  right:8%;
+  bottom:-2px;
+  font-size:76px;
+  filter:drop-shadow(0 10px 10px rgba(0,0,0,.12));
+}
+.hero-title{
+  font-size:clamp(28px,3vw,42px);
+  line-height:1.1;
+  font-weight:900;
+  letter-spacing:.2px;
+  text-shadow:0 2px 0 rgba(255,255,255,.10);
+}
+.hero-sub{
+  margin-top:8px;
+  color:#eaf0ff;
+  font-size:clamp(14px,1.25vw,18px);
+  font-weight:600;
+}
+
+/* ===== DECOR ===== */
+body:before,body:after{
+  position:fixed;
+  z-index:-1;
+  font-size:110px;
+  opacity:.12;
+  filter:saturate(.8);
+}
+body:before{content:"📚";left:35px;top:330px;transform:rotate(-10deg)}
+body:after{content:"⚛️";right:35px;bottom:60px}
+
+/* ===== LAYOUT ===== */
+main{
+  max-width:930px;
+  margin:0 auto;
+  padding:22px 16px 55px;
+}
+#setup,
+#menu:not(.hide),
+#answers:not(.hide),
+#msg{
+  background:var(--card);
+  border:1px solid rgba(157,172,219,.30);
+  box-shadow:var(--shadow);
+  backdrop-filter:blur(10px);
+}
+#setup{
+  border-radius:24px;
+  padding:22px 20px 20px;
+  margin-bottom:18px;
+}
+#setup .model-title{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+  margin:0 0 4px;
+  color:#1c307a;
+  font-size:20px;
+  font-weight:900;
+}
+#setup .model-title .round-icon{
+  width:50px;height:50px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:50%;
+  background:linear-gradient(145deg,#ede6ff,#fbf9ff);
+  font-size:26px;
+}
+#setup .model-hint{
+  margin:0 0 14px;
+  color:var(--muted);
+  font-size:15px;
+  font-weight:650;
+}
+#setup .manual-title{
+  margin:18px 0 9px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:8px;
+  color:#2c2d79;
+  font-weight:900;
+  font-size:17px;
+}
+
+/* ===== INPUT ===== */
+input{
+  width:min(100%,820px);
+  padding:15px 18px;
+  border:2px solid #d5ddef;
+  border-radius:15px;
+  outline:0;
+  background:#fff;
+  color:#2b355c;
+  font-size:16px;
+  box-shadow:inset 0 2px 5px rgba(62,79,134,.05);
+  transition:.2s;
+}
+input:focus{
+  border-color:#7e8fff;
+  box-shadow:0 0 0 4px rgba(126,143,255,.13);
+}
+input::placeholder{color:#a4abc1}
+
+/* ===== BUTTONS ===== */
+button{
+  border:0;
+  border-radius:16px;
+  padding:13px 21px;
+  margin:6px;
+  cursor:pointer;
+  font-family:inherit;
+  font-size:18px;
+  font-weight:900;
+  transition:transform .16s ease,filter .16s ease,box-shadow .16s ease;
+}
+button:hover{transform:translateY(-2px);filter:brightness(1.02)}
+button:active{transform:translateY(0)}
+
+.b-go{
+  min-width:320px;
+  color:#fff;
+  background:linear-gradient(135deg,#4a9dff,#176df5);
+  box-shadow:0 10px 20px rgba(36,111,239,.28);
+}
+.b-go:before{content:"📷  "}
+
+.b-q{
+  min-width:250px;
+  color:#fff;
+  background:linear-gradient(135deg,#ffb62f,#ff8616);
+  box-shadow:0 10px 18px rgba(255,143,24,.25);
+}
+.b-q:before{content:"❓  "}
+
+.b-s{
+  min-width:250px;
+  color:#fff;
+  background:linear-gradient(135deg,#54dc74,#12b957);
+  box-shadow:0 10px 18px rgba(25,183,88,.24);
+}
+.b-s:before{content:"📄  "}
+
+.b-r{
+  color:#fff;
+  background:linear-gradient(135deg,#ff6674,#f23856);
+  box-shadow:0 8px 16px rgba(238,58,84,.22);
+}
+.b-r:before{content:"↩  "}
+
+.b-a{
+  min-width:105px;
+  color:#fff;
+  background:linear-gradient(135deg,#a983ff,#7855f0);
+  box-shadow:0 8px 16px rgba(116,83,239,.20);
+}
+
+.b-g{
+  color:#263055;
+  background:#f6f7fb;
+  border:1px solid #dee4f1;
+  padding:12px 15px;
+  font-size:15px;
+  box-shadow:0 5px 12px rgba(77,93,165,.08);
+}
+
+/* ===== SUBJECT BUTTONS ===== */
+#manual{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+  max-width:850px;
+  margin:0 auto;
+}
+#manual button{
+  width:100%;
+  height:64px;
+  margin:0;
+  padding:0 14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  font-size:16px;
+  line-height:1.15;
+  font-weight:900;
+  white-space:normal;
+  text-align:center;
+}
+#manual button:nth-child(1){background:#edf5ff;border:1px solid #b7d4ff;color:#2053a6}
+#manual button:nth-child(1):before{display:inline-flex;width:24px;height:24px;align-items:center;justify-content:center;flex:0 0 24px;content:"🧮";font-size:21px}
+#manual button:nth-child(2){background:#fff0f5;border:1px solid #ffc6da;color:#d72f63}
+#manual button:nth-child(2):before{display:inline-flex;width:24px;height:24px;align-items:center;justify-content:center;flex:0 0 24px;content:"📖";font-size:21px}
+#manual button:nth-child(3){background:#fff7df;border:1px solid #ffda95;color:#b96612}
+#manual button:nth-child(3):before{display:inline-flex;width:24px;height:24px;align-items:center;justify-content:center;flex:0 0 24px;content:"💛";font-size:20px}
+#manual button:nth-child(4){background:#eafbef;border:1px solid #b5ecc6;color:#15763e}
+#manual button:nth-child(4):before{display:inline-flex;width:24px;height:24px;align-items:center;justify-content:center;flex:0 0 24px;content:"🍃";font-size:21px}
+#manual button:nth-child(5){background:#f2edff;border:1px solid #d4c6ff;color:#5a37bb}
+#manual button:nth-child(5):before{display:inline-flex;width:24px;height:24px;align-items:center;justify-content:center;flex:0 0 24px;content:"🧪";font-size:21px}
+#manual button:nth-child(6){background:#e7fbf9;border:1px solid #ade8e3;color:#12766d}
+#manual button:nth-child(6):before{display:inline-flex;width:24px;height:24px;align-items:center;justify-content:center;flex:0 0 24px;content:"🌐";font-size:21px}
+
+/* ===== CAMERA / MESSAGE ===== */
+#cam{
+  display:inline-block;
+  overflow:hidden;
+  min-height:60px;
+  border:5px solid #8465f6;
+  border-radius:22px;
+  background:#fff;
+  box-shadow:0 12px 28px rgba(95,78,208,.18);
+}
+#cam:empty{display:none}
+#cam canvas{display:block;max-width:100%;height:auto}
+
+#bar{
+  margin:9px 0 2px;
+  color:#5d6681;
+  font-size:14px;
+  font-weight:700;
+}
+#dbg{
+  max-width:850px;
+  margin:10px auto 0;
+  min-height:0!important;
+  color:#c92f3d!important;
+  font-size:14px!important;
+  font-weight:750;
+}
+#dbg:not(:empty){
+  padding:12px 15px;
+  border:1px solid #ffd1d5;
+  border-radius:14px;
+  background:#fff0f1;
+}
+#dbg:not(:empty):before{content:"⚠️  "}
+
+#msg{
+  max-width:850px;
+  min-height:65px;
+  margin:16px auto;
+  padding:17px 20px;
+  border-radius:24px;
+  color:#18234f;
+  font-size:22px;
+  font-weight:900;
+  line-height:1.5;
+  white-space:pre-line;
+}
+
+/* ===== ACTION CARD ===== */
+#menu:not(.hide){
+  max-width:850px;
+  margin:0 auto;
+  padding:16px 14px 12px;
+  border-radius:24px;
+}
+#menu:not(.hide):before{
+  content:"📚  Chọn CÂU HỎI hoặc TÓM TẮT";
+  display:block;
+  margin:0 0 9px;
+  color:#24336f;
+  font-size:18px;
+  font-weight:900;
+}
+#answers:not(.hide){
+  max-width:850px;
+  margin:0 auto;
+  padding:15px;
+  border-radius:24px;
+}
+.ans{
+  display:inline-block;
+  margin-top:10px;
+  padding:12px 18px;
+  text-align:left;
+  border:1px solid #e1e6f4;
+  border-radius:16px;
+  background:#f8f9ff;
+  font-size:18px;
+  font-weight:700;
+}
+.ans div{padding:5px 0}
+
+.hide{display:none!important}
+
+/* ===== MOBILE ===== */
+@media(max-width:760px){
+  header{padding:20px 78px 18px;min-height:120px}
+  header:before{left:3%;font-size:44px}
+  header:after{right:2%;font-size:55px}
+  main{padding:15px 10px 35px}
+  #setup{padding:18px 12px}
+  #manual{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #manual button{height:62px;font-size:15px}
+  .b-go,.b-q,.b-s{min-width:min(92%,310px)}
+  #msg{font-size:18px;padding:14px}
+}
+@media(max-width:430px){
+  header{padding:18px 58px 16px}
+  header:before{font-size:36px}
+  header:after{font-size:45px}
+  .hero-title{font-size:24px}
+  .hero-sub{font-size:13px}
+  #manual{grid-template-columns:1fr}
+  #manual button{height:58px}
+}
 </style>
 </head>
 <body>
-<header>📚 Đố vui theo sách (Teachable Machine)</header>
+<header>
+  <div class="hero-title">📖 Đố vui theo sách (Teachable Machine)</div>
+  <div class="hero-sub">Dùng AI nhận diện sách và tạo câu hỏi hoặc tóm tắt nội dung</div>
+</header>
 <main>
   <div id="setup">
-    <p>Dán link model Teachable Machine (dạng <code>https://teachablemachine.withgoogle.com/models/xxxx/</code>):</p>
-    <input id="url" placeholder="Link model">
+    <div class="model-title"><span class="round-icon">🔗</span><span>Dán link model Teachable Machine</span></div>
+    <div class="model-hint">Dạng: <code>https://teachablemachine.withgoogle.com/models/xxxx/</code></div>
+    <input id="url" placeholder="🔗  Link model">
     <div><button class="b-go" onclick="startCam()">Bật camera & nhận diện</button></div>
-    <p>Chưa có model? Chọn môn thủ công để thử:</p>
+    <div class="manual-title">🎓 Chưa có model? Chọn môn thủ công để thử:</div>
     <div id="manual"></div>
   </div>
 
   <div id="cam"></div>
   <div id="bar"></div>
-  <div id="msg">Chọn cách bắt đầu ở trên</div>
+  <div id="dbg" style="font-size:14px;color:#c0392b;min-height:18px"></div>
+  <div id="msg">📘 Chọn cách bắt đầu ở trên</div>
 
   <div id="menu" class="hide">
     <button class="b-q" onclick="startQuiz()">CÂU HỎI</button>
     <button class="b-s" onclick="doSummary()">TÓM TẮT</button>
-    <div><button class="b-g" onclick="rescan()">Quét sách khác</button></div>
+    <div><button class="b-r" onclick="rescan()">QUÉT SÁCH KHÁC</button></div>
   </div>
 
   <div><button id="back" class="b-r hide" onclick="backToMenu()">QUAY LẠI</button></div>
@@ -81,32 +426,53 @@ const MON = [
      ["Biển có vai trò như thế nào đối với đời sống và kinh tế Việt Nam?","Không có vai trò gì","Chỉ để ngắm cảnh","Cung cấp hải sản, giao thông và du lịch",2],
      ["Nhân vật nào đã đánh thắng quân Nam Hán trên sông Bạch Đằng năm 938?","Ngô Quyền","Lý Thái Tổ","Trần Hưng Đạo",0]]},
 ];
-const NGUONG = 0.9;      // độ tin cậy tối thiểu
+const NGUONG = 0.7;      // độ tin cậy tối thiểu
 const SO_KHUNG = 8;      // số lần liên tiếp nhận cùng một môn mới chấp nhận
 
 // ====== Âm thanh: chỉ dùng file mp3 trong thư mục audio (không dùng giọng máy) ======
-let curAudio=null;
-let oscs=[],playTok=0;
+// iPad/iPhone chỉ cho phát tiếng khi "đã được mở khóa" bằng một lần chạm màn hình.
+// Nên dùng MỘT thẻ audio dùng chung, mở khóa ở lần chạm đầu tiên, sau đó chỉ đổi src.
+let ac=null;
+const player=new Audio();
+player.preload='auto';
+player.setAttribute('playsinline','');
+let oscs=[],playTok=0,unlocked=false;
+function dbg(t){const d=document.getElementById('dbg');if(d)d.textContent=t||'';}
+function testSound(){beep(true);setTimeout(()=>play('toan_cau1.mp3'),800);}
+function unlockAudio(){
+  if(unlocked)return;
+  unlocked=true;
+  try{
+    ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    if(ac.state==='suspended')ac.resume();
+  }catch(e){}
+  player.muted=true;
+  player.src='lsdl_cau1.mp3';
+  player.play().then(()=>{if(player.muted){player.pause();player.muted=false;}}).catch(()=>{player.muted=false;});
+}
+['pointerdown','touchstart','click'].forEach(ev=>document.addEventListener(ev,unlockAudio,{capture:true}));
 function stopAudio(){
   playTok++;
-  if(curAudio){try{curAudio.pause();curAudio.currentTime=0;}catch(e){}curAudio=null;}
+  try{player.pause();}catch(e){}
   oscs.forEach(o=>{try{o.stop();}catch(e){}});oscs=[];
-  document.querySelectorAll('audio').forEach(a=>a.pause());
 }
 function play(src){
   stopAudio();
   if(!src)return Promise.resolve();
   return new Promise(res=>{
-    const a=new Audio(src);curAudio=a;const tok=playTok;
-    a.onended=res;a.onerror=res;
-    a.play().then(()=>{if(tok!==playTok){a.pause();res();}}).catch(res);
+    player.muted=false;
+    player.onended=res;
+    player.onerror=()=>{dbg('Không tải được file '+src+' (mã lỗi '+(player.error?player.error.code:'?')+'). Kiểm tra thư mục audio đã lên GitHub chưa.');res();};
+    player.src=src;
+    const pr=player.play();
+    if(pr&&pr.then)pr.then(()=>dbg('')).catch(err=>{dbg('Không phát được '+src+': '+(err&&err.name)+' '+(err&&err.message||''));res();});
   });
 }
 // tiếng "ting" (đúng) và "bụp" (sai), không có giọng nói
-let ac=null;
 function beep(ok){
   try{
     ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    if(ac.state==='suspended')ac.resume();
     const notes=ok?[[660,0],[880,0.15]]:[[220,0],[160,0.18]];
     notes.forEach(([f,t])=>{
       const o=ac.createOscillator(),g=ac.createGain();
@@ -125,6 +491,7 @@ const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d
 
 // ====== Trạng thái ======
 let run=0;
+let started=false,camActive=false;
 let model,webcam,mode='idle',mon=-1,qi=0,diem=0,streak=0,last=-1;
 
 $('manual').innerHTML=MON.map((m,i)=>`<button class="b-g" onclick="chonMon(${i})">${m.ten}</button>`).join('');
@@ -147,11 +514,10 @@ async function startCam(){
     stage='tải model';say('Đang tải model...');
     model=await tmImage.load(url+'model.json',url+'metadata.json');
     stage='bật camera';
-    webcam=new tmImage.Webcam(320,320,true);
-    await webcam.setup(); await webcam.play();
-    $('cam').innerHTML=''; $('cam').appendChild(webcam.canvas);
+    await camOn();
     show('setup',false);
-    rescan();
+    started=true;
+    await rescan();
     requestAnimationFrame(loop);
   }catch(e){
     const m=(e&&(e.message||e.name))||String(e);
@@ -159,27 +525,51 @@ async function startCam(){
     say('Lỗi ở bước "'+stage+'": '+m);
   }
 }
+async function camOn(){
+  webcam=new tmImage.Webcam(320,320,true);
+  await webcam.setup(); await webcam.play();
+  $('cam').innerHTML=''; $('cam').appendChild(webcam.canvas);
+  camActive=true;
+}
+function camOff(){
+  try{if(webcam)webcam.stop();}catch(e){}
+  camActive=false;
+  $('cam').innerHTML='';$('bar').textContent='';
+}
 async function loop(){
-  webcam.update();
-  if(mode==='scan'){
+  if(mode==='scan'&&camActive){
+    webcam.update();
     const p=await model.predict(webcam.canvas);
-    let best=p.reduce((a,b)=>b.probability>a.probability?b:a);
-    const idx=MON.findIndex(m=>m.kw.some(k=>norm(best.className).includes(k)));
-    $('bar').textContent=`${best.className}: ${(best.probability*100).toFixed(0)}%`;
-    if(idx>=0&&best.probability>=NGUONG){
-      streak=(idx===last)?streak+1:1; last=idx;
-      if(streak>=SO_KHUNG){chonMon(idx);}
-    }else{streak=0;last=-1;}
+    if(mode==='scan'){
+      let best=p.reduce((a,b)=>b.probability>a.probability?b:a);
+      const idx=MON.findIndex(m=>m.kw.some(k=>norm(best.className).includes(k)));
+      $('bar').textContent=`${best.className}: ${(best.probability*100).toFixed(0)}%`;
+      if(idx>=0&&best.probability>=NGUONG){
+        streak=(idx===last)?streak+1:1; last=idx;
+        if(streak>=SO_KHUNG){chonMon(idx);}
+      }else{streak=0;last=-1;}
+    }
   }
   requestAnimationFrame(loop);
 }
-function rescan(){
-  mode='scan';streak=0;last=-1;mon=-1;
+async function rescan(){
+  run++;stopAudio();
+  mon=-1;streak=0;last=-1;
   show('menu',false);show('answers',false);show('back',false);
-  say('Hãy đưa sách vào camera...');
+  if(!started){mode='idle';show('setup',true);say('Dán link model và bấm "Bật camera & nhận diện" ở trên.');return;}
+  mode='loading';
+  say('Đang bật camera...');
+  try{
+    if(!camActive)await camOn();
+    mode='scan';
+    say('Hãy đưa sách vào camera...');
+  }catch(e){
+    mode='idle';
+    say('Không bật được camera: '+((e&&(e.message||e.name))||e));
+  }
 }
 async function chonMon(i){
-  mon=i;mode='menu';
+  mon=i;mode='menu';camOff();
   show('menu',true);show('answers',false);
   say('Đã nhận ra sách: '+MON[i].ten+'\nChọn CÂU HỎI hoặc TÓM TẮT');
 }
@@ -192,9 +582,8 @@ async function doSummary(){
   const t=++run;
   show('menu',false);show('back',true);
   say('Tóm tắt: '+MON[mon].ten+'\n'+MON[mon].tomtat);
-  await play('audio/'+MON[mon].id+'_tomtat.mp3');
-  if(t!==run)return;
-  show('back',false);show('menu',true);
+  await play('' +MON[mon].id+'_tomtat.mp3');
+  // phát xong vẫn giữ nguyên, chỉ còn nút QUAY LẠI để người dùng tự bấm
 }
 function startQuiz(){
   run++;qi=0;diem=0;mode='quiz';
@@ -216,7 +605,19 @@ function qText(){
 async function speakQ(){
   const q=MON[mon].q[qi];
   showQ();
-  await play('audio/'+MON[mon].id+'_cau'+(qi+1)+'.mp3');
+
+  // Môn Toán đã đổi vị trí câu 1 và câu 3,
+  // nên chỉ đổi file audio trong HTML để khớp nội dung mới.
+  let audioFile;
+  if(MON[mon].id==='toan'){
+    if(qi===0) audioFile='toan_cau3.mp3';
+    else if(qi===2) audioFile='toan_cau1.mp3';
+    else audioFile='toan_cau2.mp3';
+  }else{
+    audioFile=MON[mon].id+'_cau'+(qi+1)+'.mp3';
+  }
+
+  await play(audioFile);
 }
 async function answer(k){
   if(mode!=='quiz')return;
