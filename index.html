@@ -38,7 +38,7 @@
   <div id="menu" class="hide">
     <button class="b-q" onclick="startQuiz()">CÂU HỎI</button>
     <button class="b-s" onclick="doSummary()">TÓM TẮT</button>
-    <div><button class="b-g" onclick="rescan()">Quét sách khác</button></div>
+    <div><button class="b-r" onclick="rescan()">QUAY LẠI</button></div>
   </div>
 
   <div><button id="back" class="b-r hide" onclick="backToMenu()">QUAY LẠI</button></div>
@@ -235,8 +235,7 @@ async function doSummary(){
   show('menu',false);show('back',true);
   say('Tóm tắt: '+MON[mon].ten+'\n'+MON[mon].tomtat);
   await play('audio/'+MON[mon].id+'_tomtat.mp3');
-  if(t!==run)return;
-  show('back',false);show('menu',true);
+  // phát xong vẫn giữ nguyên, chỉ còn nút QUAY LẠI để người dùng tự bấm
 }
 function startQuiz(){
   run++;qi=0;diem=0;mode='quiz';
