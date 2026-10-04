@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Đố vui theo sách</title>
+<style>
+  body{font-family:Arial,sans-serif;margin:0;background:#f3efff;color:#222;text-align:center}
+  header{background:#6a3fd0;color:#fff;padding:12px;font-size:20px;font-weight:bold}
+  main{max-width:640px;margin:0 auto;padding:12px}
+  input{width:92%;padding:10px;font-size:15px;border:2px solid #aaa;border-radius:8px}
+  button{font-size:20px;font-weight:bold;border:3px solid #222;border-radius:14px;padding:14px 22px;margin:6px;cursor:pointer;color:#fff}
+  .b-q{background:#e67e22}.b-s{background:#27ae60}.b-a{background:#9966ff;min-width:90px}
+  .b-r{background:#e74c3c}.b-g{background:#777;font-size:14px;padding:8px 12px}.b-go{background:#2f7fd1}
+  #cam{display:inline-block;border:4px solid #6a3fd0;border-radius:12px;overflow:hidden;min-height:60px}
+    .ans{display:inline-block;text-align:left;margin-top:6px}
+  #msg{font-size:22px;line-height:1.5;min-height:60px;margin:10px;font-weight:bold;white-space:pre-line}
+  .hide{display:none}
+  #cam:empty{display:none}
+  #bar{font-size:14px;color:#555}
+</style>
+</head>
+<body>
+<header>📚 Đố vui theo sách (Teachable Machine)</header>
+<main>
+  <div id="setup">
+    <p>Dán link model Teachable Machine (dạng <code>https://teachablemachine.withgoogle.com/models/xxxx/</code>):</p>
+    <input id="url" placeholder="Link model">
+    <div><button class="b-go" onclick="startCam()">Bật camera & nhận diện</button></div>
+    <p>Chưa có model? Chọn môn thủ công để thử:</p>
+    <div id="manual"></div>
+  </div>
+
+  <div id="cam"></div>
+  <div id="bar"></div>
+  <div id="msg">Chọn cách bắt đầu ở trên</div>
+
+  <div id="menu" class="hide">
+    <button class="b-q" onclick="startQuiz()">CÂU HỎI</button>
+    <button class="b-s" onclick="doSummary()">TÓM TẮT</button>
+    <div><button class="b-g" onclick="rescan()">Quét sách khác</button></div>
+  </div>
+
+  <div><button id="back" class="b-r hide" onclick="backToMenu()">QUAY LẠI</button></div>
+
+  <div id="answers" class="hide">
+    <button class="b-a" onclick="answer(0)">A</button>
+    <button class="b-a" onclick="answer(1)">B</button>
+    <button class="b-a" onclick="answer(2)">C</button>
+    <button class="b-r" onclick="backToMenu()">QUAY LẠI</button>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+<script>
+// ====== SỬA NỘI DUNG Ở ĐÂY: mỗi môn có tóm tắt + 3 câu hỏi [câu, A, B, C, đáp án đúng 0=A 1=B 2=C] ======
+const MON = [
+ {id:"toan", ten:"Toán", kw:["toan"], tomtat:"Môn Toán từ lớp 1 đến lớp 5 giúp học sinh hình thành và phát triển các kiến thức, kĩ năng toán học từ cơ bản đến nâng cao. Ở lớp 1, học sinh làm quen với các số, phép cộng và phép trừ đơn giản, nhận biết một số hình học cơ bản, đo độ dài và xem giờ. Lên lớp 2, học sinh học các số lớn hơn, thực hiện cộng, trừ, bước đầu làm quen với phép nhân, phép chia và các đơn vị đo. Ở lớp 3, học sinh tiếp tục rèn luyện bốn phép tính, làm quen với phân số, chu vi, diện tích và giải các bài toán có lời văn. Lớp 4 mở rộng kiến thức về số tự nhiên, phân số, trung bình cộng, biểu đồ, góc, đường thẳng và diện tích các hình. Đến lớp 5, học sinh học số thập phân, tỉ số phần trăm, các đơn vị đo, diện tích, thể tích, vận tốc, quãng đường, thời gian và vận dụng kiến thức để giải các bài toán thực tế. Qua đó, môn Toán giúp học sinh phát triển tư duy logic, khả năng tính toán, suy luận và giải quyết vấn đề trong học tập cũng như trong cuộc sống.",
+  q:[["Lan có 24 viên bi, cho bạn 8 viên thì còn lại bao nhiêu viên?","14 viên","16 viên","18 viên",1],
+     ["Một hình chữ nhật dài 8 cm, rộng 5 cm thì có diện tích bao nhiêu?","13 cm vuông","26 cm vuông","40 cm vuông",2],
+     ["Một chiếc áo giá 200.000 đồng được giảm 10%. Số tiền được giảm là bao nhiêu?","10.000 đồng","20.000 đồng","100.000 đồng",1]]},
+ {id:"tiengviet", ten:"Tiếng Việt", kw:["viet"], tomtat:"Môn Tiếng Việt từ lớp 1 đến lớp 5 giúp học sinh hình thành và phát triển các kĩ năng nghe, nói, đọc, viết một cách toàn diện. Ở lớp 1, học sinh làm quen với âm, chữ, vần, tập đọc các từ và câu đơn giản, luyện viết chữ và kể lại những câu chuyện ngắn. Lên lớp 2 và lớp 3, học sinh mở rộng vốn từ, đọc hiểu các văn bản ngắn, nhận biết từ chỉ sự vật, hoạt động, đặc điểm, biết đặt câu, viết đoạn văn và kể chuyện. Ở lớp 4, học sinh tiếp tục rèn luyện khả năng đọc hiểu, học về danh từ, động từ, tính từ, các thành phần câu, đồng thời luyện viết văn kể chuyện, miêu tả và trình bày ý kiến. Đến lớp 5, học sinh được nâng cao kĩ năng đọc và phân tích văn bản, mở rộng kiến thức về từ đồng nghĩa, trái nghĩa, từ nhiều nghĩa, liên kết câu, đồng thời luyện viết các bài văn miêu tả, kể chuyện, trình bày quan điểm và giao tiếp trong nhiều tình huống khác nhau. Qua đó, môn Tiếng Việt giúp học sinh sử dụng tiếng Việt đúng, rõ ràng, giàu cảm xúc và phát triển khả năng giao tiếp, tư duy, sáng tạo.",
+  q:[["Trong câu: Bạn Lan đang đọc sách, từ nào chỉ hoạt động?","Lan","đọc","sách",1],
+     ["Câu nào dùng đúng từ chăm chỉ?","Bạn Nam chăm chỉ làm bài tập.","Cái bàn chăm chỉ chạy nhanh.","Trời mưa chăm chỉ ăn cơm.",0],
+     ["Câu “Mặt trời từ từ nhô lên sau rặng núi” gợi ra cảnh gì?","Cảnh bình minh buổi sáng","Cảnh hoàng hôn buổi chiều","Cảnh đêm tối",0]]},
+ {id:"daoduc", ten:"Đạo đức", kw:["dao duc","daoduc"], tomtat:"Môn Đạo đức từ lớp 1 đến lớp 5 giúp học sinh hình thành những phẩm chất, thói quen và cách ứng xử phù hợp trong học tập, gia đình và cuộc sống. Ở lớp 1, học sinh được làm quen với các nội dung như lễ phép, yêu thương gia đình, chăm học, giữ gìn vệ sinh và thực hiện nội quy. Lên lớp 2 và lớp 3, học sinh học cách nhận lỗi và sửa lỗi, giữ lời hứa, quý trọng thời gian, giúp đỡ bạn bè, biết tiết kiệm, hoàn thành nhiệm vụ và bảo vệ môi trường. Ở lớp 4, học sinh tiếp tục phát triển ý thức trách nhiệm, biết ơn người lao động, tôn trọng tài sản của người khác và của công, đồng thời biết cảm thông, chia sẻ và giúp đỡ những người xung quanh. Đến lớp 5, học sinh được rèn luyện khả năng tôn trọng sự khác biệt, vượt qua khó khăn, bảo vệ điều đúng, sử dụng tiền hợp lí, có trách nhiệm với cộng đồng và môi trường. Qua đó, môn Đạo đức góp phần giúp học sinh hình thành nhân cách tốt, biết sống có trách nhiệm, yêu thương, trung thực và ứng xử phù hợp với mọi người.",
+  q:[["Nếu em làm hỏng đồ dùng của bạn, em nên làm gì?","Giấu đi","Xin lỗi và giúp bạn sửa hoặc đền","Đổ lỗi cho người khác",1],
+     ["Khi thấy một bạn bị trêu chọc, em sẽ làm gì?","Cười theo","Đứng nhìn","Bênh vực bạn và báo thầy cô",2],
+     ["Vì sao chúng ta cần giữ lời hứa?","Để mọi người tin tưởng mình","Để được khen","Không cần giữ lời hứa",0]]},
+ {id:"tnxh", ten:"Tự nhiên và Xã hội", kw:["tu nhien","tunhien","tnxh","xa hoi"], tomtat:"Môn Tự nhiên và Xã hội ở lớp 1 đến lớp 3 giúp học sinh tìm hiểu những sự vật, hiện tượng gần gũi trong cuộc sống và môi trường xung quanh. Ở lớp 1, học sinh làm quen với các chủ đề về gia đình, trường học, cộng đồng, cơ thể người, cây cối, con vật, thời tiết và một số quy tắc an toàn. Lên lớp 2, học sinh tìm hiểu sâu hơn về các thành viên trong gia đình, nghề nghiệp, hoạt động ở trường, cơ quan vận động và hô hấp, môi trường sống của thực vật và động vật. Đến lớp 3, học sinh tiếp tục học về họ hàng, cộng đồng, hoạt động sản xuất, cơ thể và sức khỏe, đặc điểm của thực vật và động vật, Trái Đất, Mặt Trời, phương hướng và bảo vệ môi trường. Qua đó, môn Tự nhiên và Xã hội giúp học sinh biết quan sát, nhận xét, giải thích những hiện tượng đơn giản, chăm sóc bản thân, ứng xử phù hợp với mọi người và có ý thức bảo vệ thiên nhiên, môi trường.",
+  q:[["Cây cần những điều kiện gì để sống và phát triển?","Nước, ánh sáng và không khí","Kẹo và bánh","Ti vi",0],
+     ["Vì sao cần giữ vệ sinh cơ thể?","Để ngủ được lâu","Để cơ thể sạch sẽ, khỏe mạnh, ít bị bệnh","Không cần thiết",1],
+     ["Mặt Trời có vai trò gì đối với con người, động vật và thực vật?","Chỉ để trang trí","Làm trời tối","Cho ánh sáng và hơi ấm để sinh sống",2]]},
+ {id:"khoahoc", ten:"Khoa học", kw:["khoa hoc","khoahoc"], tomtat:"Môn Khoa học ở lớp 4 và lớp 5 giúp học sinh tìm hiểu các sự vật, hiện tượng tự nhiên và những kiến thức khoa học gần gũi với đời sống. Học sinh được học về nước, không khí, ánh sáng, âm thanh, nhiệt, điện, các dạng năng lượng và cách sử dụng năng lượng an toàn, tiết kiệm. Bên cạnh đó, môn học còn giúp học sinh tìm hiểu về thực vật, động vật, chuỗi thức ăn, sự sinh sản và phát triển của sinh vật, cơ thể người, dinh dưỡng, phòng tránh bệnh tật, môi trường và tài nguyên thiên nhiên. Qua các hoạt động quan sát, thực hành và thí nghiệm đơn giản, học sinh rèn luyện khả năng đặt câu hỏi, dự đoán, giải thích hiện tượng và vận dụng kiến thức khoa học vào cuộc sống, từ đó hình thành ý thức chăm sóc sức khỏe, bảo vệ môi trường và sử dụng tài nguyên hợp lí.",
+  q:[["Vì sao cây xanh cần ánh sáng để phát triển?","Để tạo chất dinh dưỡng nuôi cây","Để có màu đẹp","Để đi ngủ",0],
+     ["Đâu là hai nguồn năng lượng tái tạo?","Than đá và dầu mỏ","Gió và ánh sáng Mặt Trời","Khí đốt và xăng",1],
+     ["Em cần làm gì để sử dụng điện an toàn?","Dùng tay ướt cắm điện","Nghịch ổ điện","Giữ tay khô và tránh xa dây điện hở",2]]},
+ {id:"lsdl", ten:"Lịch sử và Địa lí", kw:["lich su","lichsu","dia li","dia ly","dialy","diali"], tomtat:"Môn Lịch sử và Địa lí ở lớp 4 và lớp 5 giúp học sinh hiểu những nét cơ bản về quá trình hình thành, xây dựng và bảo vệ đất nước, đồng thời nhận biết đặc điểm tự nhiên, dân cư và các hoạt động kinh tế của Việt Nam. Ở phần Lịch sử, học sinh tìm hiểu một số nhân vật, sự kiện và giai đoạn tiêu biểu của lịch sử dân tộc, các triều đại, những cuộc đấu tranh bảo vệ Tổ quốc, Chủ tịch Hồ Chí Minh và quá trình xây dựng, phát triển đất nước. Ở phần Địa lí, học sinh được học về vị trí địa lí, địa hình, khí hậu, sông ngòi, biển đảo, dân cư, các vùng miền và một số hoạt động sản xuất, kinh tế của Việt Nam, đồng thời bước đầu tìm hiểu về một số quốc gia và khu vực trên thế giới. Qua đó, môn Lịch sử và Địa lí giúp học sinh hiểu hơn về quê hương, đất nước, biết trân trọng truyền thống dân tộc, có ý thức bảo vệ chủ quyền, tài nguyên, môi trường và vận dụng kiến thức để tìm hiểu các vấn đề trong cuộc sống.",
+  q:[["Việt Nam nằm ở khu vực nào của châu Á?","Bắc Á","Đông Nam Á","Tây Á",1],
+     ["Biển có vai trò như thế nào đối với đời sống và kinh tế Việt Nam?","Không có vai trò gì","Chỉ để ngắm cảnh","Cung cấp hải sản, giao thông và du lịch",2],
+     ["Nhân vật nào đã đánh thắng quân Nam Hán trên sông Bạch Đằng năm 938?","Ngô Quyền","Lý Thái Tổ","Trần Hưng Đạo",0]]},
+];
+const NGUONG = 0.9;      // độ tin cậy tối thiểu
+const SO_KHUNG = 8;      // số lần liên tiếp nhận cùng một môn mới chấp nhận
+
+// ====== Âm thanh: chỉ dùng file mp3 trong thư mục audio (không dùng giọng máy) ======
+let curAudio=null;
+let oscs=[],playTok=0;
+function stopAudio(){
+  playTok++;
+  if(curAudio){try{curAudio.pause();curAudio.currentTime=0;}catch(e){}curAudio=null;}
+  oscs.forEach(o=>{try{o.stop();}catch(e){}});oscs=[];
+  document.querySelectorAll('audio').forEach(a=>a.pause());
+}
+function play(src){
+  stopAudio();
+  if(!src)return Promise.resolve();
+  return new Promise(res=>{
+    const a=new Audio(src);curAudio=a;const tok=playTok;
+    a.onended=res;a.onerror=res;
+    a.play().then(()=>{if(tok!==playTok){a.pause();res();}}).catch(res);
+  });
+}
+// tiếng "ting" (đúng) và "bụp" (sai), không có giọng nói
+let ac=null;
+function beep(ok){
+  try{
+    ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    const notes=ok?[[660,0],[880,0.15]]:[[220,0],[160,0.18]];
+    notes.forEach(([f,t])=>{
+      const o=ac.createOscillator(),g=ac.createGain();
+      o.type=ok?'sine':'square';o.frequency.value=f;
+      g.gain.setValueAtTime(0.2,ac.currentTime+t);
+      g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+t+0.25);
+      o.connect(g);g.connect(ac.destination);oscs.push(o);o.start(ac.currentTime+t);o.stop(ac.currentTime+t+0.26);
+    });
+  }catch(e){}
+  return new Promise(r=>setTimeout(r,700));
+}
+const $=id=>document.getElementById(id);
+const show=(id,on)=>$(id).classList.toggle('hide',!on);
+const say=t=>{$('msg').textContent=t;};
+const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').toLowerCase();
+
+// ====== Trạng thái ======
+let run=0;
+let model,webcam,mode='idle',mon=-1,qi=0,diem=0,streak=0,last=-1;
+
+$('manual').innerHTML=MON.map((m,i)=>`<button class="b-g" onclick="chonMon(${i})">${m.ten}</button>`).join('');
+
+async function startCam(){
+  const base=$('url').value.trim();
+  if(!base){say('Hãy dán link model trước.');return;}
+  const url=base.endsWith('/')?base:base+'/';
+  show('menu',false);show('answers',false);show('back',false);
+  let stage='';
+  try{
+    stage='kiểm tra camera';
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)
+      throw new Error('Trình duyệt không cho dùng camera ở trang này (hãy mở bằng Chrome)');
+    const st=await navigator.mediaDevices.getUserMedia({video:true});
+    st.getTracks().forEach(t=>t.stop());
+    stage='tải thư viện';
+    if(typeof tmImage==='undefined'||typeof tf==='undefined')
+      throw new Error('Không tải được thư viện Teachable Machine, kiểm tra internet');
+    stage='tải model';say('Đang tải model...');
+    model=await tmImage.load(url+'model.json',url+'metadata.json');
+    stage='bật camera';
+    webcam=new tmImage.Webcam(320,320,true);
+    await webcam.setup(); await webcam.play();
+    $('cam').innerHTML=''; $('cam').appendChild(webcam.canvas);
+    show('setup',false);
+    rescan();
+    requestAnimationFrame(loop);
+  }catch(e){
+    const m=(e&&(e.message||e.name))||String(e);
+    console.error(stage,e);
+    say('Lỗi ở bước "'+stage+'": '+m);
+  }
+}
+async function loop(){
+  webcam.update();
+  if(mode==='scan'){
+    const p=await model.predict(webcam.canvas);
+    let best=p.reduce((a,b)=>b.probability>a.probability?b:a);
+    const idx=MON.findIndex(m=>m.kw.some(k=>norm(best.className).includes(k)));
+    $('bar').textContent=`${best.className}: ${(best.probability*100).toFixed(0)}%`;
+    if(idx>=0&&best.probability>=NGUONG){
+      streak=(idx===last)?streak+1:1; last=idx;
+      if(streak>=SO_KHUNG){chonMon(idx);}
+    }else{streak=0;last=-1;}
+  }
+  requestAnimationFrame(loop);
+}
+function rescan(){
+  mode='scan';streak=0;last=-1;mon=-1;
+  show('menu',false);show('answers',false);show('back',false);
+  say('Hãy đưa sách vào camera...');
+}
+async function chonMon(i){
+  mon=i;mode='menu';
+  show('menu',true);show('answers',false);
+  say('Đã nhận ra sách: '+MON[i].ten+'\nChọn CÂU HỎI hoặc TÓM TẮT');
+}
+function backToMenu(){
+  run++;stopAudio();mode='menu';
+  show('answers',false);show('back',false);show('menu',true);
+  say('Đã nhận ra sách: '+MON[mon].ten+'\nChọn CÂU HỎI hoặc TÓM TẮT');
+}
+async function doSummary(){
+  const t=++run;
+  show('menu',false);show('back',true);
+  say('Tóm tắt: '+MON[mon].ten+'\n'+MON[mon].tomtat);
+  await play('audio/'+MON[mon].id+'_tomtat.mp3');
+  if(t!==run)return;
+  show('back',false);show('menu',true);
+}
+function startQuiz(){
+  run++;qi=0;diem=0;mode='quiz';
+  show('menu',false);show('answers',true);
+  speakQ();
+}
+function showQ(){
+  const q=MON[mon].q[qi],m=$('msg');
+  m.innerHTML='';
+  const h=document.createElement('div');h.textContent=`Câu ${qi+1}: ${q[0]}`;
+  const box=document.createElement('div');box.className='ans';
+  ['A','B','C'].forEach((L,i)=>{const d=document.createElement('div');d.textContent=`Đáp án ${L}: ${q[i+1]}`;box.appendChild(d);});
+  m.appendChild(h);m.appendChild(box);
+}
+function qText(){
+  const q=MON[mon].q[qi];
+  return `Câu ${qi+1}: ${q[0]}\nĐáp án A: ${q[1]}\nĐáp án B: ${q[2]}\nĐáp án C: ${q[3]}`;
+}
+async function speakQ(){
+  const q=MON[mon].q[qi];
+  showQ();
+  await play('audio/'+MON[mon].id+'_cau'+(qi+1)+'.mp3');
+}
+async function answer(k){
+  if(mode!=='quiz')return;
+  mode='wait';const t=run;
+  const q=MON[mon].q[qi],L='ABC'[q[4]];
+  if(k===q[4]){diem++;stopAudio();say('QUÁ ĐÚNG! 🎉');await beep(true);}
+  else{stopAudio();say('SAI RỒI! Đáp án là '+L);await beep(false);}
+  if(t!==run)return;
+  qi++;
+  if(qi<3){mode='quiz';speakQ();}
+  else{
+    show('answers',false);
+    const tx=`Điểm của bạn: ${diem} / 3`;
+    say(tx);await new Promise(r=>setTimeout(r,3500));
+    if(t!==run)return;
+    rescan();
+  }
+}
+</script>
+</body>
+</html>
