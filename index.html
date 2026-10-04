@@ -27,7 +27,6 @@
     <p>Dán link model Teachable Machine (dạng <code>https://teachablemachine.withgoogle.com/models/xxxx/</code>):</p>
     <input id="url" placeholder="Link model">
     <div><button class="b-go" onclick="startCam()">Bật camera & nhận diện</button></div>
-    <div><button class="b-g" onclick="testSound()">🔊 Thử âm thanh</button></div>
     <p>Chưa có model? Chọn môn thủ công để thử:</p>
     <div id="manual"></div>
   </div>
@@ -59,9 +58,9 @@
 // ====== SỬA NỘI DUNG Ở ĐÂY: mỗi môn có tóm tắt + 3 câu hỏi [câu, A, B, C, đáp án đúng 0=A 1=B 2=C] ======
 const MON = [
  {id:"toan", ten:"Toán", kw:["toan"], tomtat:"Môn Toán từ lớp 1 đến lớp 5 giúp học sinh hình thành và phát triển các kiến thức, kĩ năng toán học từ cơ bản đến nâng cao. Ở lớp 1, học sinh làm quen với các số, phép cộng và phép trừ đơn giản, nhận biết một số hình học cơ bản, đo độ dài và xem giờ. Lên lớp 2, học sinh học các số lớn hơn, thực hiện cộng, trừ, bước đầu làm quen với phép nhân, phép chia và các đơn vị đo. Ở lớp 3, học sinh tiếp tục rèn luyện bốn phép tính, làm quen với phân số, chu vi, diện tích và giải các bài toán có lời văn. Lớp 4 mở rộng kiến thức về số tự nhiên, phân số, trung bình cộng, biểu đồ, góc, đường thẳng và diện tích các hình. Đến lớp 5, học sinh học số thập phân, tỉ số phần trăm, các đơn vị đo, diện tích, thể tích, vận tốc, quãng đường, thời gian và vận dụng kiến thức để giải các bài toán thực tế. Qua đó, môn Toán giúp học sinh phát triển tư duy logic, khả năng tính toán, suy luận và giải quyết vấn đề trong học tập cũng như trong cuộc sống.",
-  q:[["Lan có 24 viên bi, cho bạn 8 viên thì còn lại bao nhiêu viên?","14 viên","16 viên","18 viên",1],
+  q:[["Một chiếc áo giá 200.000 đồng được giảm 10%. Số tiền được giảm là bao nhiêu?","10.000 đồng","20.000 đồng","100.000 đồng",1],
      ["Một hình chữ nhật dài 8 cm, rộng 5 cm thì có diện tích bao nhiêu?","13 cm vuông","26 cm vuông","40 cm vuông",2],
-     ["Một chiếc áo giá 200.000 đồng được giảm 10%. Số tiền được giảm là bao nhiêu?","10.000 đồng","20.000 đồng","100.000 đồng",1]]},
+     ["Lan có 24 viên bi, cho bạn 8 viên thì còn lại bao nhiêu viên?","14 viên","16 viên","18 viên",1]]},
  {id:"tiengviet", ten:"Tiếng Việt", kw:["viet"], tomtat:"Môn Tiếng Việt từ lớp 1 đến lớp 5 giúp học sinh hình thành và phát triển các kĩ năng nghe, nói, đọc, viết một cách toàn diện. Ở lớp 1, học sinh làm quen với âm, chữ, vần, tập đọc các từ và câu đơn giản, luyện viết chữ và kể lại những câu chuyện ngắn. Lên lớp 2 và lớp 3, học sinh mở rộng vốn từ, đọc hiểu các văn bản ngắn, nhận biết từ chỉ sự vật, hoạt động, đặc điểm, biết đặt câu, viết đoạn văn và kể chuyện. Ở lớp 4, học sinh tiếp tục rèn luyện khả năng đọc hiểu, học về danh từ, động từ, tính từ, các thành phần câu, đồng thời luyện viết văn kể chuyện, miêu tả và trình bày ý kiến. Đến lớp 5, học sinh được nâng cao kĩ năng đọc và phân tích văn bản, mở rộng kiến thức về từ đồng nghĩa, trái nghĩa, từ nhiều nghĩa, liên kết câu, đồng thời luyện viết các bài văn miêu tả, kể chuyện, trình bày quan điểm và giao tiếp trong nhiều tình huống khác nhau. Qua đó, môn Tiếng Việt giúp học sinh sử dụng tiếng Việt đúng, rõ ràng, giàu cảm xúc và phát triển khả năng giao tiếp, tư duy, sáng tạo.",
   q:[["Trong câu: Bạn Lan đang đọc sách, từ nào chỉ hoạt động?","Lan","đọc","sách",1],
      ["Câu nào dùng đúng từ chăm chỉ?","Bạn Nam chăm chỉ làm bài tập.","Cái bàn chăm chỉ chạy nhanh.","Trời mưa chăm chỉ ăn cơm.",0],
@@ -95,7 +94,7 @@ player.preload='auto';
 player.setAttribute('playsinline','');
 let oscs=[],playTok=0,unlocked=false;
 function dbg(t){const d=document.getElementById('dbg');if(d)d.textContent=t||'';}
-function testSound(){beep(true);setTimeout(()=>play('audio/toan_cau1.mp3'),800);}
+function testSound(){beep(true);setTimeout(()=>play('toan_cau1.mp3'),800);}
 function unlockAudio(){
   if(unlocked)return;
   unlocked=true;
@@ -104,7 +103,7 @@ function unlockAudio(){
     if(ac.state==='suspended')ac.resume();
   }catch(e){}
   player.muted=true;
-  player.src='audio/lsdl_cau1.mp3';
+  player.src='lsdl_cau1.mp3';
   player.play().then(()=>{if(player.muted){player.pause();player.muted=false;}}).catch(()=>{player.muted=false;});
 }
 ['pointerdown','touchstart','click'].forEach(ev=>document.addEventListener(ev,unlockAudio,{capture:true}));
@@ -239,7 +238,7 @@ async function doSummary(){
   const t=++run;
   show('menu',false);show('back',true);
   say('Tóm tắt: '+MON[mon].ten+'\n'+MON[mon].tomtat);
-  await play('audio/'+MON[mon].id+'_tomtat.mp3');
+  await play('' +MON[mon].id+'_tomtat.mp3');
   // phát xong vẫn giữ nguyên, chỉ còn nút QUAY LẠI để người dùng tự bấm
 }
 function startQuiz(){
@@ -262,7 +261,7 @@ function qText(){
 async function speakQ(){
   const q=MON[mon].q[qi];
   showQ();
-  await play('audio/'+MON[mon].id+'_cau'+(qi+1)+'.mp3');
+  await play('' +MON[mon].id+'_cau'+(qi+1)+'.mp3');
 }
 async function answer(k){
   if(mode!=='quiz')return;
