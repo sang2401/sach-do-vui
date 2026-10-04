@@ -27,12 +27,14 @@
     <p>Dán link model Teachable Machine (dạng <code>https://teachablemachine.withgoogle.com/models/xxxx/</code>):</p>
     <input id="url" placeholder="Link model">
     <div><button class="b-go" onclick="startCam()">Bật camera & nhận diện</button></div>
+    <div><button class="b-g" onclick="testSound()">🔊 Thử âm thanh</button></div>
     <p>Chưa có model? Chọn môn thủ công để thử:</p>
     <div id="manual"></div>
   </div>
 
   <div id="cam"></div>
   <div id="bar"></div>
+  <div id="dbg" style="font-size:14px;color:#c0392b;min-height:18px"></div>
   <div id="msg">Chọn cách bắt đầu ở trên</div>
 
   <div id="menu" class="hide">
@@ -92,6 +94,8 @@ const player=new Audio();
 player.preload='auto';
 player.setAttribute('playsinline','');
 let oscs=[],playTok=0,unlocked=false;
+function dbg(t){const d=document.getElementById('dbg');if(d)d.textContent=t||'';}
+function testSound(){beep(true);setTimeout(()=>play('audio/toan_cau1.mp3'),800);}
 function unlockAudio(){
   if(unlocked)return;
   unlocked=true;
@@ -114,10 +118,11 @@ function play(src){
   if(!src)return Promise.resolve();
   return new Promise(res=>{
     player.muted=false;
-    player.onended=res;player.onerror=res;
+    player.onended=res;
+    player.onerror=()=>{dbg('Không tải được file '+src+' (mã lỗi '+(player.error?player.error.code:'?')+'). Kiểm tra thư mục audio đã lên GitHub chưa.');res();};
     player.src=src;
-    player.currentTime=0;
-    player.play().catch(err=>{console.warn('Không phát được',src,err);res();});
+    const pr=player.play();
+    if(pr&&pr.then)pr.then(()=>dbg('')).catch(err=>{dbg('Không phát được '+src+': '+(err&&err.name)+' '+(err&&err.message||''));res();});
   });
 }
 // tiếng "ting" (đúng) và "bụp" (sai), không có giọng nói
