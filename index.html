@@ -261,7 +261,19 @@ function qText(){
 async function speakQ(){
   const q=MON[mon].q[qi];
   showQ();
-  await play('' +MON[mon].id+'_cau'+(qi+1)+'.mp3');
+
+  // Môn Toán đã đổi vị trí câu 1 và câu 3,
+  // nên chỉ đổi file audio trong HTML để khớp nội dung mới.
+  let audioFile;
+  if(MON[mon].id==='toan'){
+    if(qi===0) audioFile='toan_cau3.mp3';
+    else if(qi===2) audioFile='toan_cau1.mp3';
+    else audioFile='toan_cau2.mp3';
+  }else{
+    audioFile=MON[mon].id+'_cau'+(qi+1)+'.mp3';
+  }
+
+  await play(audioFile);
 }
 async function answer(k){
   if(mode!=='quiz')return;
