@@ -447,7 +447,7 @@ function unlockAudio(){
     if(ac.state==='suspended')ac.resume();
   }catch(e){}
   player.muted=true;
-  player.src='lsdl_cau1.mp3';
+  player.src='audio/lsdl_cau1.mp3?v=20261004';
   player.play().then(()=>{if(player.muted){player.pause();player.muted=false;}}).catch(()=>{player.muted=false;});
 }
 ['pointerdown','touchstart','click'].forEach(ev=>document.addEventListener(ev,unlockAudio,{capture:true}));
@@ -459,13 +459,22 @@ function stopAudio(){
 function play(src){
   stopAudio();
   if(!src)return Promise.resolve();
+
+  let audioSrc = src;
+  if(!/^https?:\/\//i.test(audioSrc) && !audioSrc.startsWith('audio/')){
+    audioSrc = 'audio/' + audioSrc;
+  }
+
+  // Chống cache để GitHub Pages/trình duyệt lấy đúng audio mới
+  audioSrc += (audioSrc.includes('?') ? '&' : '?') + 'v=20261004b';
+
   return new Promise(res=>{
     player.muted=false;
     player.onended=res;
-    player.onerror=()=>{dbg('Không tải được file '+src+' (mã lỗi '+(player.error?player.error.code:'?')+'). Kiểm tra thư mục audio đã lên GitHub chưa.');res();};
-    player.src=src;
+    player.onerror=()=>{dbg('Không tải được file '+audioSrc+' (mã lỗi '+(player.error?player.error.code:'?')+'). Kiểm tra thư mục audio đã lên GitHub chưa.');res();};
+    player.src=audioSrc;
     const pr=player.play();
-    if(pr&&pr.then)pr.then(()=>dbg('')).catch(err=>{dbg('Không phát được '+src+': '+(err&&err.name)+' '+(err&&err.message||''));res();});
+    if(pr&&pr.then)pr.then(()=>dbg('')).catch(err=>{dbg('Không phát được '+audioSrc+': '+(err&&err.name)+' '+(err&&err.message||''));res();});
   });
 }
 // tiếng "ting" (đúng) và "bụp" (sai), không có giọng nói
