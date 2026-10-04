@@ -85,28 +85,46 @@ const NGUONG = 0.9;      // độ tin cậy tối thiểu
 const SO_KHUNG = 8;      // số lần liên tiếp nhận cùng một môn mới chấp nhận
 
 // ====== Âm thanh: chỉ dùng file mp3 trong thư mục audio (không dùng giọng máy) ======
-let curAudio=null;
-let oscs=[],playTok=0;
+// iPad/iPhone chỉ cho phát tiếng khi "đã được mở khóa" bằng một lần chạm màn hình.
+// Nên dùng MỘT thẻ audio dùng chung, mở khóa ở lần chạm đầu tiên, sau đó chỉ đổi src.
+let ac=null;
+const player=new Audio();
+player.preload='auto';
+player.setAttribute('playsinline','');
+let oscs=[],playTok=0,unlocked=false;
+function unlockAudio(){
+  if(unlocked)return;
+  unlocked=true;
+  try{
+    ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    if(ac.state==='suspended')ac.resume();
+  }catch(e){}
+  player.muted=true;
+  player.src='audio/lsdl_cau1.mp3';
+  player.play().then(()=>{if(player.muted){player.pause();player.muted=false;}}).catch(()=>{player.muted=false;});
+}
+['pointerdown','touchstart','click'].forEach(ev=>document.addEventListener(ev,unlockAudio,{capture:true}));
 function stopAudio(){
   playTok++;
-  if(curAudio){try{curAudio.pause();curAudio.currentTime=0;}catch(e){}curAudio=null;}
+  try{player.pause();}catch(e){}
   oscs.forEach(o=>{try{o.stop();}catch(e){}});oscs=[];
-  document.querySelectorAll('audio').forEach(a=>a.pause());
 }
 function play(src){
   stopAudio();
   if(!src)return Promise.resolve();
   return new Promise(res=>{
-    const a=new Audio(src);curAudio=a;const tok=playTok;
-    a.onended=res;a.onerror=res;
-    a.play().then(()=>{if(tok!==playTok){a.pause();res();}}).catch(res);
+    player.muted=false;
+    player.onended=res;player.onerror=res;
+    player.src=src;
+    player.currentTime=0;
+    player.play().catch(err=>{console.warn('Không phát được',src,err);res();});
   });
 }
 // tiếng "ting" (đúng) và "bụp" (sai), không có giọng nói
-let ac=null;
 function beep(ok){
   try{
     ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    if(ac.state==='suspended')ac.resume();
     const notes=ok?[[660,0],[880,0.15]]:[[220,0],[160,0.18]];
     notes.forEach(([f,t])=>{
       const o=ac.createOscillator(),g=ac.createGain();
@@ -125,6 +143,7 @@ const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d
 
 // ====== Trạng thái ======
 let run=0;
+let started=false,camActive=false;
 let model,webcam,mode='idle',mon=-1,qi=0,diem=0,streak=0,last=-1;
 
 $('manual').innerHTML=MON.map((m,i)=>`<button class="b-g" onclick="chonMon(${i})">${m.ten}</button>`).join('');
@@ -147,11 +166,10 @@ async function startCam(){
     stage='tải model';say('Đang tải model...');
     model=await tmImage.load(url+'model.json',url+'metadata.json');
     stage='bật camera';
-    webcam=new tmImage.Webcam(320,320,true);
-    await webcam.setup(); await webcam.play();
-    $('cam').innerHTML=''; $('cam').appendChild(webcam.canvas);
+    await camOn();
     show('setup',false);
-    rescan();
+    started=true;
+    await rescan();
     requestAnimationFrame(loop);
   }catch(e){
     const m=(e&&(e.message||e.name))||String(e);
@@ -159,27 +177,51 @@ async function startCam(){
     say('Lỗi ở bước "'+stage+'": '+m);
   }
 }
+async function camOn(){
+  webcam=new tmImage.Webcam(320,320,true);
+  await webcam.setup(); await webcam.play();
+  $('cam').innerHTML=''; $('cam').appendChild(webcam.canvas);
+  camActive=true;
+}
+function camOff(){
+  try{if(webcam)webcam.stop();}catch(e){}
+  camActive=false;
+  $('cam').innerHTML='';$('bar').textContent='';
+}
 async function loop(){
-  webcam.update();
-  if(mode==='scan'){
+  if(mode==='scan'&&camActive){
+    webcam.update();
     const p=await model.predict(webcam.canvas);
-    let best=p.reduce((a,b)=>b.probability>a.probability?b:a);
-    const idx=MON.findIndex(m=>m.kw.some(k=>norm(best.className).includes(k)));
-    $('bar').textContent=`${best.className}: ${(best.probability*100).toFixed(0)}%`;
-    if(idx>=0&&best.probability>=NGUONG){
-      streak=(idx===last)?streak+1:1; last=idx;
-      if(streak>=SO_KHUNG){chonMon(idx);}
-    }else{streak=0;last=-1;}
+    if(mode==='scan'){
+      let best=p.reduce((a,b)=>b.probability>a.probability?b:a);
+      const idx=MON.findIndex(m=>m.kw.some(k=>norm(best.className).includes(k)));
+      $('bar').textContent=`${best.className}: ${(best.probability*100).toFixed(0)}%`;
+      if(idx>=0&&best.probability>=NGUONG){
+        streak=(idx===last)?streak+1:1; last=idx;
+        if(streak>=SO_KHUNG){chonMon(idx);}
+      }else{streak=0;last=-1;}
+    }
   }
   requestAnimationFrame(loop);
 }
-function rescan(){
-  mode='scan';streak=0;last=-1;mon=-1;
+async function rescan(){
+  run++;stopAudio();
+  mon=-1;streak=0;last=-1;
   show('menu',false);show('answers',false);show('back',false);
-  say('Hãy đưa sách vào camera...');
+  if(!started){mode='idle';show('setup',true);say('Dán link model và bấm "Bật camera & nhận diện" ở trên.');return;}
+  mode='loading';
+  say('Đang bật camera...');
+  try{
+    if(!camActive)await camOn();
+    mode='scan';
+    say('Hãy đưa sách vào camera...');
+  }catch(e){
+    mode='idle';
+    say('Không bật được camera: '+((e&&(e.message||e.name))||e));
+  }
 }
 async function chonMon(i){
-  mon=i;mode='menu';
+  mon=i;mode='menu';camOff();
   show('menu',true);show('answers',false);
   say('Đã nhận ra sách: '+MON[i].ten+'\nChọn CÂU HỎI hoặc TÓM TẮT');
 }
