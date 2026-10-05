@@ -220,38 +220,37 @@ button:active{transform:translateY(0)}
 /* ===== SUBJECT BUTTONS ===== */
 #manual{
   display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-columns:repeat(6,minmax(0,1fr));
   gap:12px;
   max-width:850px;
   margin:0 auto;
 }
 #manual button{
   width:100%;
-  height:64px;
+  min-height:78px;
+  height:auto;
   margin:0;
-  padding:0 14px;
+  padding:12px 14px;
   display:flex;
   align-items:center;
   justify-content:center;
   gap:8px;
-  font-size:16px;
-  line-height:1.15;
+  font-size:14px;
+  line-height:1.2;
   font-weight:900;
   white-space:normal;
   text-align:center;
 }
-#manual button:nth-child(1){background:#edf5ff;border:1px solid #b7d4ff;color:#2053a6}
-#manual button:nth-child(1):before{display:inline-flex;width:24px;height:24px;align-items:center;justify-content:center;flex:0 0 24px;content:"🧮";font-size:21px}
-#manual button:nth-child(2){background:#fff0f5;border:1px solid #ffc6da;color:#d72f63}
-#manual button:nth-child(2):before{display:inline-flex;width:24px;height:24px;align-items:center;justify-content:center;flex:0 0 24px;content:"📖";font-size:21px}
-#manual button:nth-child(3){background:#fff7df;border:1px solid #ffda95;color:#b96612}
-#manual button:nth-child(3):before{display:inline-flex;width:24px;height:24px;align-items:center;justify-content:center;flex:0 0 24px;content:"💛";font-size:20px}
-#manual button:nth-child(4){background:#eafbef;border:1px solid #b5ecc6;color:#15763e}
-#manual button:nth-child(4):before{display:inline-flex;width:24px;height:24px;align-items:center;justify-content:center;flex:0 0 24px;content:"🍃";font-size:21px}
-#manual button:nth-child(5){background:#f2edff;border:1px solid #d4c6ff;color:#5a37bb}
-#manual button:nth-child(5):before{display:inline-flex;width:24px;height:24px;align-items:center;justify-content:center;flex:0 0 24px;content:"🧪";font-size:21px}
-#manual button:nth-child(6){background:#e7fbf9;border:1px solid #ade8e3;color:#12766d}
-#manual button:nth-child(6):before{display:inline-flex;width:24px;height:24px;align-items:center;justify-content:center;flex:0 0 24px;content:"🌐";font-size:21px}
+#manual button:nth-child(1){grid-column:1/3;background:#edf5ff;border:1px solid #b7d4ff;color:#2053a6}
+#manual button:nth-child(1):before{content:"🦗";font-size:23px}
+#manual button:nth-child(2){grid-column:3/5;background:#fff0f5;border:1px solid #ffc6da;color:#d72f63}
+#manual button:nth-child(2):before{content:"⭐";font-size:22px}
+#manual button:nth-child(3){grid-column:5/7;background:#fff7df;border:1px solid #ffda95;color:#b96612}
+#manual button:nth-child(3):before{content:"🐘";font-size:23px}
+#manual button:nth-child(4){grid-column:2/4;background:#eafbef;border:1px solid #b5ecc6;color:#15763e}
+#manual button:nth-child(4):before{content:"🎟️";font-size:22px}
+#manual button:nth-child(5){grid-column:4/6;background:#f2edff;border:1px solid #d4c6ff;color:#5a37bb}
+#manual button:nth-child(5):before{content:"🔬";font-size:22px}
 
 /* ===== CAMERA / MESSAGE ===== */
 #cam{
@@ -344,7 +343,9 @@ button:active{transform:translateY(0)}
   header:after{right:2%;font-size:55px}
   main{padding:15px 10px 35px}
   #setup{padding:18px 12px}
-  #manual{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #manual{grid-template-columns:1fr}
+  #manual button:nth-child(n){grid-column:1!important}
+  #manual button:nth-child(n){grid-column:1!important}
   #manual button{height:62px;font-size:15px}
   .b-go,.b-q,.b-s{min-width:min(92%,310px)}
   #msg{font-size:18px;padding:14px}
@@ -371,7 +372,7 @@ button:active{transform:translateY(0)}
     <div class="model-hint">Dạng: <code>https://teachablemachine.withgoogle.com/models/xxxx/</code></div>
     <input id="url" placeholder="🔗  Link model">
     <div><button class="b-go" onclick="startCam()">Bật camera & nhận diện</button></div>
-    <div class="manual-title">🎓 Chưa có model? Chọn môn thủ công để thử:</div>
+    <div class="manual-title">📚 Chưa có model? Chọn một trong 5 cuốn sách để thử:</div>
     <div id="manual"></div>
   </div>
 
@@ -399,32 +400,23 @@ button:active{transform:translateY(0)}
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
 <script>
-// ====== SỬA NỘI DUNG Ở ĐÂY: mỗi môn có tóm tắt + 3 câu hỏi [câu, A, B, C, đáp án đúng 0=A 1=B 2=C] ======
+// ====== 5 CUỐN SÁCH: mỗi sách có tóm tắt + 2 câu hỏi [câu, A, B, C, đáp án đúng 0=A 1=B 2=C] ======
 const MON = [
- {id:"toan", ten:"Toán", kw:["toan"], tomtat:"Môn Toán từ lớp 1 đến lớp 5 giúp học sinh hình thành và phát triển các kiến thức, kĩ năng toán học từ cơ bản đến nâng cao. Ở lớp 1, học sinh làm quen với các số, phép cộng và phép trừ đơn giản, nhận biết một số hình học cơ bản, đo độ dài và xem giờ. Lên lớp 2, học sinh học các số lớn hơn, thực hiện cộng, trừ, bước đầu làm quen với phép nhân, phép chia và các đơn vị đo. Ở lớp 3, học sinh tiếp tục rèn luyện bốn phép tính, làm quen với phân số, chu vi, diện tích và giải các bài toán có lời văn. Lớp 4 mở rộng kiến thức về số tự nhiên, phân số, trung bình cộng, biểu đồ, góc, đường thẳng và diện tích các hình. Đến lớp 5, học sinh học số thập phân, tỉ số phần trăm, các đơn vị đo, diện tích, thể tích, vận tốc, quãng đường, thời gian và vận dụng kiến thức để giải các bài toán thực tế. Qua đó, môn Toán giúp học sinh phát triển tư duy logic, khả năng tính toán, suy luận và giải quyết vấn đề trong học tập cũng như trong cuộc sống.",
-  q:[["Một chiếc áo giá 200.000 đồng được giảm 10%. Số tiền được giảm là bao nhiêu?","10.000 đồng","20.000 đồng","100.000 đồng",1],
-     ["Một hình chữ nhật dài 8 cm, rộng 5 cm thì có diện tích bao nhiêu?","13 cm vuông","26 cm vuông","40 cm vuông",2],
-     ["Lan có 24 viên bi, cho bạn 8 viên thì còn lại bao nhiêu viên?","14 viên","16 viên","18 viên",1]]},
- {id:"tiengviet", ten:"Tiếng Việt", kw:["viet"], tomtat:"Môn Tiếng Việt từ lớp 1 đến lớp 5 giúp học sinh hình thành và phát triển các kĩ năng nghe, nói, đọc, viết một cách toàn diện. Ở lớp 1, học sinh làm quen với âm, chữ, vần, tập đọc các từ và câu đơn giản, luyện viết chữ và kể lại những câu chuyện ngắn. Lên lớp 2 và lớp 3, học sinh mở rộng vốn từ, đọc hiểu các văn bản ngắn, nhận biết từ chỉ sự vật, hoạt động, đặc điểm, biết đặt câu, viết đoạn văn và kể chuyện. Ở lớp 4, học sinh tiếp tục rèn luyện khả năng đọc hiểu, học về danh từ, động từ, tính từ, các thành phần câu, đồng thời luyện viết văn kể chuyện, miêu tả và trình bày ý kiến. Đến lớp 5, học sinh được nâng cao kĩ năng đọc và phân tích văn bản, mở rộng kiến thức về từ đồng nghĩa, trái nghĩa, từ nhiều nghĩa, liên kết câu, đồng thời luyện viết các bài văn miêu tả, kể chuyện, trình bày quan điểm và giao tiếp trong nhiều tình huống khác nhau. Qua đó, môn Tiếng Việt giúp học sinh sử dụng tiếng Việt đúng, rõ ràng, giàu cảm xúc và phát triển khả năng giao tiếp, tư duy, sáng tạo.",
-  q:[["Trong câu: Bạn Lan đang đọc sách, từ nào chỉ hoạt động?","Lan","đọc","sách",1],
-     ["Câu nào dùng đúng từ chăm chỉ?","Bạn Nam chăm chỉ làm bài tập.","Cái bàn chăm chỉ chạy nhanh.","Trời mưa chăm chỉ ăn cơm.",0],
-     ["Câu “Mặt trời từ từ nhô lên sau rặng núi” gợi ra cảnh gì?","Cảnh bình minh buổi sáng","Cảnh hoàng hôn buổi chiều","Cảnh đêm tối",0]]},
- {id:"daoduc", ten:"Đạo đức", kw:["dao duc","daoduc"], tomtat:"Môn Đạo đức từ lớp 1 đến lớp 5 giúp học sinh hình thành những phẩm chất, thói quen và cách ứng xử phù hợp trong học tập, gia đình và cuộc sống. Ở lớp 1, học sinh được làm quen với các nội dung như lễ phép, yêu thương gia đình, chăm học, giữ gìn vệ sinh và thực hiện nội quy. Lên lớp 2 và lớp 3, học sinh học cách nhận lỗi và sửa lỗi, giữ lời hứa, quý trọng thời gian, giúp đỡ bạn bè, biết tiết kiệm, hoàn thành nhiệm vụ và bảo vệ môi trường. Ở lớp 4, học sinh tiếp tục phát triển ý thức trách nhiệm, biết ơn người lao động, tôn trọng tài sản của người khác và của công, đồng thời biết cảm thông, chia sẻ và giúp đỡ những người xung quanh. Đến lớp 5, học sinh được rèn luyện khả năng tôn trọng sự khác biệt, vượt qua khó khăn, bảo vệ điều đúng, sử dụng tiền hợp lí, có trách nhiệm với cộng đồng và môi trường. Qua đó, môn Đạo đức góp phần giúp học sinh hình thành nhân cách tốt, biết sống có trách nhiệm, yêu thương, trung thực và ứng xử phù hợp với mọi người.",
-  q:[["Nếu em làm hỏng đồ dùng của bạn, em nên làm gì?","Giấu đi","Xin lỗi và giúp bạn sửa hoặc đền","Đổ lỗi cho người khác",1],
-     ["Khi thấy một bạn bị trêu chọc, em sẽ làm gì?","Cười theo","Đứng nhìn","Bênh vực bạn và báo thầy cô",2],
-     ["Vì sao chúng ta cần giữ lời hứa?","Để mọi người tin tưởng mình","Để được khen","Không cần giữ lời hứa",0]]},
- {id:"tnxh", ten:"Tự nhiên và Xã hội", kw:["tu nhien","tunhien","tnxh","xa hoi"], tomtat:"Môn Tự nhiên và Xã hội ở lớp 1 đến lớp 3 giúp học sinh tìm hiểu những sự vật, hiện tượng gần gũi trong cuộc sống và môi trường xung quanh. Ở lớp 1, học sinh làm quen với các chủ đề về gia đình, trường học, cộng đồng, cơ thể người, cây cối, con vật, thời tiết và một số quy tắc an toàn. Lên lớp 2, học sinh tìm hiểu sâu hơn về các thành viên trong gia đình, nghề nghiệp, hoạt động ở trường, cơ quan vận động và hô hấp, môi trường sống của thực vật và động vật. Đến lớp 3, học sinh tiếp tục học về họ hàng, cộng đồng, hoạt động sản xuất, cơ thể và sức khỏe, đặc điểm của thực vật và động vật, Trái Đất, Mặt Trời, phương hướng và bảo vệ môi trường. Qua đó, môn Tự nhiên và Xã hội giúp học sinh biết quan sát, nhận xét, giải thích những hiện tượng đơn giản, chăm sóc bản thân, ứng xử phù hợp với mọi người và có ý thức bảo vệ thiên nhiên, môi trường.",
-  q:[["Cây cần những điều kiện gì để sống và phát triển?","Nước, ánh sáng và không khí","Kẹo và bánh","Ti vi",0],
-     ["Vì sao cần giữ vệ sinh cơ thể?","Để ngủ được lâu","Để cơ thể sạch sẽ, khỏe mạnh, ít bị bệnh","Không cần thiết",1],
-     ["Mặt Trời có vai trò gì đối với con người, động vật và thực vật?","Chỉ để trang trí","Làm trời tối","Cho ánh sáng và hơi ấm để sinh sống",2]]},
- {id:"khoahoc", ten:"Khoa học", kw:["khoa hoc","khoahoc"], tomtat:"Môn Khoa học ở lớp 4 và lớp 5 giúp học sinh tìm hiểu các sự vật, hiện tượng tự nhiên và những kiến thức khoa học gần gũi với đời sống. Học sinh được học về nước, không khí, ánh sáng, âm thanh, nhiệt, điện, các dạng năng lượng và cách sử dụng năng lượng an toàn, tiết kiệm. Bên cạnh đó, môn học còn giúp học sinh tìm hiểu về thực vật, động vật, chuỗi thức ăn, sự sinh sản và phát triển của sinh vật, cơ thể người, dinh dưỡng, phòng tránh bệnh tật, môi trường và tài nguyên thiên nhiên. Qua các hoạt động quan sát, thực hành và thí nghiệm đơn giản, học sinh rèn luyện khả năng đặt câu hỏi, dự đoán, giải thích hiện tượng và vận dụng kiến thức khoa học vào cuộc sống, từ đó hình thành ý thức chăm sóc sức khỏe, bảo vệ môi trường và sử dụng tài nguyên hợp lí.",
-  q:[["Vì sao cây xanh cần ánh sáng để phát triển?","Để tạo chất dinh dưỡng nuôi cây","Để có màu đẹp","Để đi ngủ",0],
-     ["Đâu là hai nguồn năng lượng tái tạo?","Than đá và dầu mỏ","Gió và ánh sáng Mặt Trời","Khí đốt và xăng",1],
-     ["Em cần làm gì để sử dụng điện an toàn?","Dùng tay ướt cắm điện","Nghịch ổ điện","Giữ tay khô và tránh xa dây điện hở",2]]},
- {id:"lsdl", ten:"Lịch sử và Địa lí", kw:["lich su","lichsu","dia li","dia ly","dialy","diali"], tomtat:"Môn Lịch sử và Địa lí ở lớp 4 và lớp 5 giúp học sinh hiểu những nét cơ bản về quá trình hình thành, xây dựng và bảo vệ đất nước, đồng thời nhận biết đặc điểm tự nhiên, dân cư và các hoạt động kinh tế của Việt Nam. Ở phần Lịch sử, học sinh tìm hiểu một số nhân vật, sự kiện và giai đoạn tiêu biểu của lịch sử dân tộc, các triều đại, những cuộc đấu tranh bảo vệ Tổ quốc, Chủ tịch Hồ Chí Minh và quá trình xây dựng, phát triển đất nước. Ở phần Địa lí, học sinh được học về vị trí địa lí, địa hình, khí hậu, sông ngòi, biển đảo, dân cư, các vùng miền và một số hoạt động sản xuất, kinh tế của Việt Nam, đồng thời bước đầu tìm hiểu về một số quốc gia và khu vực trên thế giới. Qua đó, môn Lịch sử và Địa lí giúp học sinh hiểu hơn về quê hương, đất nước, biết trân trọng truyền thống dân tộc, có ý thức bảo vệ chủ quyền, tài nguyên, môi trường và vận dụng kiến thức để tìm hiểu các vấn đề trong cuộc sống.",
-  q:[["Việt Nam nằm ở khu vực nào của châu Á?","Bắc Á","Đông Nam Á","Tây Á",1],
-     ["Biển có vai trò như thế nào đối với đời sống và kinh tế Việt Nam?","Không có vai trò gì","Chỉ để ngắm cảnh","Cung cấp hải sản, giao thông và du lịch",2],
-     ["Nhân vật nào đã đánh thắng quân Nam Hán trên sông Bạch Đằng năm 938?","Ngô Quyền","Lý Thái Tổ","Trần Hưng Đạo",0]]},
+ {id:"demen", ten:"DẾ MÈN PHIÊU LƯU KÝ", kw:["de men", "demen", "de_men", "phieu luu ky"], tomtat:"Chào mừng bạn đến với cuốn sách 'Dế Mèn Phiêu Lưu Ký' của nhà văn Tô Hoài! Đây là tác phẩm văn học thiếu nhi kinh điển của Việt Nam. Tác phẩm kể về chú Dế Mèn từ một kẻ ngông cuồng, xốc nổi, qua những trải nghiệm gian nan trên con đường phiêu lưu đã trở thành một chú Dế dũng cảm, biết yêu thương và đấu tranh cho hòa bình. Bạn hãy cùng đọc sách để rút ra những bài học quý giá cho bản thân nhé!",
+  q:[["Ai là người bạn đồng hành thân thiết cùng Dế Mèn trên những chặng đường phiêu lưu?", "Dế Choắt", "Dế Trắt", "Xiển Tóc Tiên", 1], ["Bài học lớn nhất Dế Mèn rút ra sau sự cố với Dế Choắt là gì?", "Không ngông cuồng, coi thường người khác", "Không đi ra khỏi nhà", "Không kết bạn với ai", 0]],
+  audioTomtat:"demen_tomtat.mp3", audioQ:["demen_cau1.mp3", "demen_cau2.mp3"]},
+ {id:"bacho", ten:"BÁC HỒ VỚI THIẾU NHI - THIẾU NHI VỚI BÁC HỒ", kw:["bac ho", "bacho", "bac_ho", "thieu nhi"], tomtat:"Xin chào bạn nhỏ! Bạn đang cầm trên tay cuốn sách 'Bác Hồ với thiếu nhi - Thiếu nhi với Bác Hồ'. Lúc sinh thời, Bác Hồ kính yêu luôn dành tình cảm đặc biệt cho các cháu thiếu niên, nhi đồng. Cuốn sách ghi lại những câu chuyện vô cùng ấm áp về Bác và 5 Điều Bác Hồ dạy. Chúng mình hãy cùng thi đua học tốt, rèn luyện chăm để trở thành con ngoan, trò giỏi, cháu ngoan Bác Hồ nhé!",
+  q:[["Điều thứ nhất trong \"5 điều Bác Hồ dạy\" thiếu niên, nhi đồng là gì?", "Học tập tốt, lao động tốt", "Đoàn kết tốt, kỷ luật tốt", "Yêu Tổ quốc, yêu đồng bào", 0], ["Bác Hồ thường gửi thư và quà cho các cháu thiếu nhi vào những dịp đặc biệt nào?", "Trung thu và Ngày Khai trường", "Ngày Tết Nguyên Đán", "Ngày Quốc tế Lao động", 0]],
+  audioTomtat:"bacho_tomtat.mp3", audioQ:["bacho_cau1.mp3", "bacho_cau2.mp3"]},
+ {id:"haibatrung", ten:"LỊCH SỬ VIỆT NAM BẰNG TRANH - HAI BÀ TRƯNG", kw:["hai ba trung", "haibatrung", "hai_ba_trung", "lich su viet nam bang tranh"], tomtat:"Chào mừng bạn đến với trang sử vàng dân tộc qua cuốn sách 'Lịch sử Việt Nam bằng tranh - Hai Bà Trưng'! Mùa xuân năm 40, trước sự hống hách của quân xâm lược nhà Hán, Hai Bà Trưng đã phất cờ khởi nghĩa tại Hát Môn. Hình ảnh Hai Bà cưỡi voi ra trận đã trở thành biểu tượng bất khuất của người phụ nữ Việt Nam. Hãy cùng lật mở từng trang sách để thêm tự hào về truyền thống dựng nước và giữ nước nhé!",
+  q:[["Hai Bà Trưng đã phất cờ khởi nghĩa chống lại quân xâm lược nào?", "Quân Mông Cổ", "Quân Hán", "Quân Minh", 1], ["Hình ảnh nổi tiếng gắn liền với Hai Bà Trưng khi ra trận là gì?", "Cưỡi voi chiến", "Đi ngựa chiến", "Đi thuyền chiến", 0]],
+  audioTomtat:"haibatrung_tomtat.mp3", audioQ:["haibatrung_cau1.mp3", "haibatrung_cau2.mp3"]},
+ {id:"tuoitho", ten:"CHO TÔI XIN MỘT VÉ ĐI TUỔI THƠ", kw:["cho toi xin mot ve", "tuoi tho", "tuoitho", "tuoi_tho"], tomtat:"Bạn có muốn tìm lại một tấm vé quay về thế giới tuổi thơ rực rỡ không? Cuốn sách 'Cho tôi xin một vé đi tuổi thơ' của chú Nguyễn Nhật Ánh sẽ đưa chúng mình cùng Cu Mùi, Tí Sún, Hải Cò trải qua những trò chơi ngộ nghĩnh và những câu chuyện vô cùng đáng yêu. Cuốn sách giúp chúng mình thêm yêu bạn bè, thầy cô và trân trọng những ngày tháng đi học đấy!",
+  q:[["Nhân vật xưng \"tôi\" và là người kể chuyện trong tác phẩm tên là gì?", "Hải Cò", "Tải Tỉn", "Cu Mùi", 2], ["Tác giả của cuốn sách \"Cho tôi xin một vé đi tuổi thơ\" là ai?", "Tô Hoài", "Nguyễn Nhật Ánh", "Trần Đăng Khoa", 1]],
+  audioTomtat:null, audioQ:[null, null]},
+ {id:"muoivan", ten:"MƯỜI VẠN CÂU HỎI VÌ SAO - KHÁM PHÁ THẾ GIỚI TỰ NHIÊN", kw:["muoi van", "muoivan", "muoi_van", "cau hoi vi sao", "kham pha the gioi tu nhien"], tomtat:"Xin chào nhà khoa học nhí! Thế giới xung quanh chúng ta có vô vàn điều kỳ diệu đúng không nào? Cuốn sách 'Mười vạn câu hỏi vì sao' sẽ là người bạn đồng hành giải đáp mọi thắc mắc của bạn về cây cỏ, con vật và các hiện tượng thiên nhiên. Hãy luôn giữ tinh thần tò mò, chủ động tìm tòi để tích lũy kho tàng tri thức mỗi ngày bạn nhé!",
+  q:[["Tinh thần cốt lõi mà cuốn sách \"Mười vạn câu hỏi vì sao\" muốn gửi gắm đến học sinh là gì?", "Tự học và chủ động khám phá tri thức", "Chỉ xem hình minh họa", "Học thuộc lòng", 0], ["Vì sao lá cây thường có màu xanh lục?", "Do tưới nước nhiều", "Do ánh nắng chiếu vào", "Do có chất diệp lục", 2]],
+  audioTomtat:"muoivan_tomtat.mp3", audioQ:["muoivan_cau1.mp3", "muoivan_cau2.mp3"]}
 ];
 const NGUONG = 0.7;      // độ tin cậy tối thiểu
 const SO_KHUNG = 8;      // số lần liên tiếp nhận cùng một môn mới chấp nhận
@@ -447,7 +439,7 @@ function unlockAudio(){
     if(ac.state==='suspended')ac.resume();
   }catch(e){}
   player.muted=true;
-  player.src='audio/lsdl_cau1.mp3?v=20261004';
+  player.src='audio/demen_cau1.mp3?v=20261005';
   player.play().then(()=>{if(player.muted){player.pause();player.muted=false;}}).catch(()=>{player.muted=false;});
 }
 ['pointerdown','touchstart','click'].forEach(ev=>document.addEventListener(ev,unlockAudio,{capture:true}));
@@ -591,8 +583,8 @@ async function doSummary(){
   const t=++run;
   show('menu',false);show('back',true);
   say('Tóm tắt: '+MON[mon].ten+'\n'+MON[mon].tomtat);
-  await play('' +MON[mon].id+'_tomtat.mp3');
-  // phát xong vẫn giữ nguyên, chỉ còn nút QUAY LẠI để người dùng tự bấm
+  if(MON[mon].audioTomtat) await play(MON[mon].audioTomtat);
+  // Nếu sách chưa có MP3 tóm tắt thì vẫn hiển thị đầy đủ nội dung trên màn hình.
 }
 function startQuiz(){
   run++;qi=0;diem=0;mode='quiz';
@@ -614,21 +606,8 @@ function qText(){
 async function speakQ(){
   const q=MON[mon].q[qi];
   showQ();
-
-  // Môn Toán đã đổi vị trí câu 1 và câu 3,
-  // nên chỉ đổi file audio trong HTML để khớp nội dung mới.
-  let audioFile;
-  if(MON[mon].id==='toan'){
-    if(qi===0) audioFile='toan_cau3.mp3';
-    else if(qi===2) audioFile='toan_cau1.mp3';
-    else audioFile='toan_cau2.mp3';
-  }else if(MON[mon].id==='lsdl' && qi===2){
-    audioFile='lsdl_cau3_moi.mp3';
-  }else{
-    audioFile=MON[mon].id+'_cau'+(qi+1)+'.mp3';
-  }
-
-  await play(audioFile);
+  const audioFile = MON[mon].audioQ ? MON[mon].audioQ[qi] : null;
+  if(audioFile) await play(audioFile);
 }
 async function answer(k){
   if(mode!=='quiz')return;
@@ -638,10 +617,10 @@ async function answer(k){
   else{stopAudio();say('SAI RỒI! Đáp án là '+L);await beep(false);}
   if(t!==run)return;
   qi++;
-  if(qi<3){mode='quiz';speakQ();}
+  if(qi<MON[mon].q.length){mode='quiz';speakQ();}
   else{
     show('answers',false);
-    const tx=`Điểm của bạn: ${diem} / 3`;
+    const tx=`Điểm của bạn: ${diem} / ${MON[mon].q.length}`;
     say(tx);await new Promise(r=>setTimeout(r,3500));
     if(t!==run)return;
     rescan();
