@@ -400,7 +400,7 @@ button:active{transform:translateY(0)}
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
 <script>
-// ====== 5 CUỐN SÁCH: mỗi sách có tóm tắt + 2 câu hỏi [câu, A, B, C, đáp án đúng 0=A 1=B 2=C] ======
+// ====== 5 CUỐN SÁCH + 1 CLASS KHÔNG CÓ SÁCH ======
 const MON = [
  {id:"demen", ten:"DẾ MÈN PHIÊU LƯU KÝ", kw:["de men", "demen", "de_men", "phieu luu ky"], tomtat:"Chào mừng bạn đến với cuốn sách 'Dế Mèn Phiêu Lưu Ký' của nhà văn Tô Hoài! Đây là tác phẩm văn học thiếu nhi kinh điển của Việt Nam. Tác phẩm kể về chú Dế Mèn từ một kẻ ngông cuồng, xốc nổi, qua những trải nghiệm gian nan trên con đường phiêu lưu đã trở thành một chú Dế dũng cảm, biết yêu thương và đấu tranh cho hòa bình. Bạn hãy cùng đọc sách để rút ra những bài học quý giá cho bản thân nhé!",
   q:[["Ai là người bạn đồng hành thân thiết cùng Dế Mèn trên những chặng đường phiêu lưu?", "Dế Choắt", "Dế Trắt", "Xiển Tóc Tiên", 1], ["Bài học lớn nhất Dế Mèn rút ra sau sự cố với Dế Choắt là gì?", "Không ngông cuồng, coi thường người khác", "Không đi ra khỏi nhà", "Không kết bạn với ai", 0]],
@@ -431,7 +431,7 @@ player.preload='auto';
 player.setAttribute('playsinline','');
 let oscs=[],playTok=0,unlocked=false;
 function dbg(t){const d=document.getElementById('dbg');if(d)d.textContent=t||'';}
-function testSound(){beep(true);setTimeout(()=>play('toan_cau1.mp3'),800);}
+function testSound(){beep(true);}
 function unlockAudio(){
   if(unlocked)return;
   unlocked=true;
