@@ -379,7 +379,7 @@ button:active{transform:translateY(0)}
   <div id="cam"></div>
   <div id="bar"></div>
   <div id="dbg" style="font-size:14px;color:#c0392b;min-height:18px"></div>
-  <div id="msg">📘 Chọn cách bắt đầu ở trên</div>
+  <div id="msg">📘 Chọn cách bắt đầu ở trên. Nếu chưa đưa sách vào, camera sẽ tiếp tục quét.</div>
 
   <div id="menu" class="hide">
     <button class="b-q" onclick="startQuiz()">CÂU HỎI</button>
@@ -419,7 +419,8 @@ const MON = [
   audioTomtat:"muoivan_tomtat.mp3", audioQ:["muoivan_cau1.mp3", "muoivan_cau2.mp3"]}
 ];
 const NGUONG = 0.7;      // độ tin cậy tối thiểu
-const SO_KHUNG = 8;      // số lần liên tiếp nhận cùng một môn mới chấp nhận
+const SO_KHUNG = 8;      // số khung liên tiếp nhận cùng một sách mới chấp nhận
+const KHONG_SACH_KW = ['khong_co_sach','khong co sach','khongcosach','no book','no_book','empty','none'];
 
 // ====== Âm thanh: chỉ dùng file mp3 trong thư mục audio (không dùng giọng máy) ======
 // iPad/iPhone chỉ cho phát tiếng khi "đã được mở khóa" bằng một lần chạm màn hình.
@@ -489,6 +490,7 @@ const $=id=>document.getElementById(id);
 const show=(id,on)=>$(id).classList.toggle('hide',!on);
 const say=t=>{$('msg').textContent=t;};
 const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').toLowerCase();
+const isNoBookClass=name=>KHONG_SACH_KW.some(k=>norm(name).includes(norm(k)));
 
 // ====== Trạng thái ======
 let run=0;
@@ -544,11 +546,20 @@ async function loop(){
     if(mode==='scan'){
       let best=p.reduce((a,b)=>b.probability>a.probability?b:a);
       const idx=MON.findIndex(m=>m.kw.some(k=>norm(best.className).includes(k)));
+      const noBook = isNoBookClass(best.className);
       $('bar').textContent=`${best.className}: ${(best.probability*100).toFixed(0)}%`;
-      if(idx>=0&&best.probability>=NGUONG){
+
+      if(noBook && best.probability>=NGUONG){
+        streak=0;last=-1;
+        show('menu',false);show('answers',false);show('back',false);
+        say('Chưa phát hiện sách. Hãy đưa bìa sách vào camera.');
+      }else if(idx>=0&&best.probability>=NGUONG){
         streak=(idx===last)?streak+1:1; last=idx;
         if(streak>=SO_KHUNG){chonMon(idx);}
-      }else{streak=0;last=-1;}
+      }else{
+        streak=0;last=-1;
+        say('Đang quét... Hãy đưa bìa sách vào camera.');
+      }
     }
   }
   requestAnimationFrame(loop);
@@ -563,7 +574,7 @@ async function rescan(){
   try{
     if(!camActive)await camOn();
     mode='scan';
-    say('Hãy đưa sách vào camera...');
+    say('Hãy đưa bìa sách vào camera...');
   }catch(e){
     mode='idle';
     say('Không bật được camera: '+((e&&(e.message||e.name))||e));
