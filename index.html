@@ -411,7 +411,7 @@ const MON = [
  {id:"haibatrung", ten:"LỊCH SỬ VIỆT NAM BẰNG TRANH - HAI BÀ TRƯNG", kw:["hai ba trung", "haibatrung", "hai_ba_trung", "lich su viet nam bang tranh"], tomtat:"Chào mừng bạn đến với trang sử vàng dân tộc qua cuốn sách 'Lịch sử Việt Nam bằng tranh - Hai Bà Trưng'! Mùa xuân năm 40, trước sự hống hách của quân xâm lược nhà Hán, Hai Bà Trưng đã phất cờ khởi nghĩa tại Hát Môn. Hình ảnh Hai Bà cưỡi voi ra trận đã trở thành biểu tượng bất khuất của người phụ nữ Việt Nam. Hãy cùng lật mở từng trang sách để thêm tự hào về truyền thống dựng nước và giữ nước nhé!",
   q:[["Hai Bà Trưng đã phất cờ khởi nghĩa chống lại quân xâm lược nào?", "Quân Mông Cổ", "Quân Hán", "Quân Minh", 1], ["Hình ảnh nổi tiếng gắn liền với Hai Bà Trưng khi ra trận là gì?", "Cưỡi voi chiến", "Đi ngựa chiến", "Đi thuyền chiến", 0]],
   audioTomtat:"haibatrung_tomtat.mp3", audioQ:["haibatrung_cau1.mp3", "haibatrung_cau2.mp3"]},
- {id:"contudautoi", ten:"CON TỪ ĐÂU TỚI?", kw:["con tu dau toi", "contudautoi", "con_tu_dau_toi", "con từ đâu tới"], tomtat:"Cuốn sách 'Con từ đâu tới?' thuộc bộ sách giáo dục giới tính dành cho học sinh tiểu học, giúp các em bước đầu tìm hiểu về sự hình thành và ra đời của một em bé theo cách gần gũi, trong sáng và phù hợp với lứa tuổi. Qua nội dung sách, học sinh có thể hiểu hơn về cơ thể, sự lớn lên của con người và tình yêu thương của cha mẹ dành cho con cái. Cuốn sách cũng góp phần giúp các em hình thành thái độ tôn trọng cơ thể, biết trân trọng bản thân và hiểu rằng mỗi em bé đều được sinh ra trong tình yêu thương, chăm sóc của gia đình.",
+ {id:"contudautoi", ten:"CON TỪ ĐÂU TỚI?", kw:["con tu dau toi", "contudautoi", "con_tu_dau_toi", "con từ đâu tới", "tuoi_tho", "tuoitho", "tuoi tho"], tomtat:"Cuốn sách 'Con từ đâu tới?' thuộc bộ sách giáo dục giới tính dành cho học sinh tiểu học, giúp các em bước đầu tìm hiểu về sự hình thành và ra đời của một em bé theo cách gần gũi, trong sáng và phù hợp với lứa tuổi. Qua nội dung sách, học sinh có thể hiểu hơn về cơ thể, sự lớn lên của con người và tình yêu thương của cha mẹ dành cho con cái. Cuốn sách cũng góp phần giúp các em hình thành thái độ tôn trọng cơ thể, biết trân trọng bản thân và hiểu rằng mỗi em bé đều được sinh ra trong tình yêu thương, chăm sóc của gia đình.",
   q:[["Cuốn sách Con từ đâu tới? giúp học sinh tìm hiểu chủ yếu về điều gì?", "Cách chăm sóc cây cối", "Sự hình thành và ra đời của em bé", "Các loài động vật", 1], ["Qua cuốn sách, học sinh nên hình thành thái độ nào đối với cơ thể của mình?", "Tôn trọng và biết bảo vệ cơ thể", "Không cần quan tâm đến cơ thể", "Chỉ quan tâm đến ngoại hình", 0]],
   audioTomtat:"contudautoi_tomtat.mp3", audioQ:["contudautoi_cau1.mp3", "contudautoi_cau2.mp3"]},
  {id:"muoivan", ten:"MƯỜI VẠN CÂU HỎI VÌ SAO - KHÁM PHÁ THẾ GIỚI TỰ NHIÊN", kw:["muoi van", "muoivan", "muoi_van", "cau hoi vi sao", "kham pha the gioi tu nhien"], tomtat:"Xin chào nhà khoa học nhí! Thế giới xung quanh chúng ta có vô vàn điều kỳ diệu đúng không nào? Cuốn sách 'Mười vạn câu hỏi vì sao' sẽ là người bạn đồng hành giải đáp mọi thắc mắc của bạn về cây cỏ, con vật và các hiện tượng thiên nhiên. Hãy luôn giữ tinh thần tò mò, chủ động tìm tòi để tích lũy kho tàng tri thức mỗi ngày bạn nhé!",
@@ -491,6 +491,11 @@ const show=(id,on)=>$(id).classList.toggle('hide',!on);
 const say=t=>{$('msg').textContent=t;};
 const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').toLowerCase();
 const isNoBookClass=name=>KHONG_SACH_KW.some(k=>norm(name).includes(norm(k)));
+function displayLabel(className){
+  if(isNoBookClass(className)) return 'KHÔNG CÓ SÁCH';
+  const i=MON.findIndex(m=>m.kw.some(k=>norm(className).includes(norm(k))));
+  return i>=0 ? MON[i].ten : 'ĐANG QUÉT';
+}
 
 // ====== Trạng thái ======
 let run=0;
@@ -515,7 +520,8 @@ async function startCam(){
     if(typeof tmImage==='undefined'||typeof tf==='undefined')
       throw new Error('Không tải được thư viện Teachable Machine, kiểm tra internet');
     stage='tải model';say('Đang tải model...');
-    model=await tmImage.load(url+'model.json',url+'metadata.json');
+    const cacheBust='?v='+Date.now();
+    model=await tmImage.load(url+'model.json'+cacheBust,url+'metadata.json'+cacheBust);
     stage='bật camera';
     await camOn();
     show('setup',false);
@@ -547,7 +553,7 @@ async function loop(){
       let best=p.reduce((a,b)=>b.probability>a.probability?b:a);
       const idx=MON.findIndex(m=>m.kw.some(k=>norm(best.className).includes(k)));
       const noBook = isNoBookClass(best.className);
-      $('bar').textContent=`${best.className}: ${(best.probability*100).toFixed(0)}%`;
+      $('bar').textContent=`${displayLabel(best.className)}: ${(best.probability*100).toFixed(0)}%`;
 
       if(noBook && best.probability>=NGUONG){
         streak=0;last=-1;
